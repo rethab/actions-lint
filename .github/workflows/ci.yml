@@ -26,3 +26,10 @@ jobs:
       - uses: ./
         with:
           files: test/success.yml
+      - uses: ./
+        id: unused-input
+        continue-on-error: true
+        with:
+          files: test/unused-input.yml
+      - run: exit 1
+        if: steps.unused-input.status == 'success'

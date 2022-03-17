@@ -1,0 +1,12 @@
+on:
+  workflow_call:
+    inputs:
+      mode:
+        type: string
+        required: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo hello
