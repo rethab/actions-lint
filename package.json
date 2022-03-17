@@ -1,0 +1,24 @@
+{
+  "name": "actions-lint",
+  "version": "1.0.0",
+  "description": "Linter for GitHub Actions",
+  "main": "src/index.ts",
+  "scripts": {
+    "format-check": "prettier --check .",
+    "test": "jest",
+    "build": "ncc build"
+  },
+  "author": "Ody Fusectore",
+  "license": "ISC",
+  "dependencies": {
+    "@fusectore/actions-yaml": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.4.1",
+    "@vercel/ncc": "^0.33.3",
+    "jest": "^27.5.1",
+    "prettier": "^2.6.0",
+    "ts-jest": "^27.1.3",
+    "ts-node": "^10.7.0"
+  }
+}

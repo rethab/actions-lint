@@ -1,0 +1,11 @@
+name: 'actions-lint'
+description: 'GitHub Action to Lint Actions'
+
+inputs:
+  files:
+    required: true
+    description: 'Files to lint'
+
+runs:
+  using: 'node16'
+  main: 'dist/index.js'

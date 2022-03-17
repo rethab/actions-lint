@@ -1,0 +1,20 @@
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run format-check
+      - run: npm run test
+      - run: npm run build
+      - name: Ensure dist/index.js is up to date
+        run: |
+          git diff --text dist/index.js
+          [[ -z $(git status -s) ]]
