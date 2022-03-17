@@ -6,7 +6,7 @@
   "scripts": {
     "format-check": "prettier --check .",
     "test": "jest",
-    "build": "ncc build"
+    "build": "ncc build && cp node_modules/@fusectore/actions-yaml/dist/workflows/workflow-schema.json dist/workflow-schema.json"
   },
   "author": "Ody Fusectore",
   "license": "ISC",
