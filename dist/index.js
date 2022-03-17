@@ -17428,7 +17428,7 @@ const core_1 = __nccwpck_require__(2186);
 const fs_1 = tslib_1.__importDefault(__nccwpck_require__(7147));
 const linter_1 = __nccwpck_require__(4756);
 function main() {
-    const file = (0, core_1.getInput)('file', { required: true });
+    const file = (0, core_1.getInput)('files', { required: true });
     const content = fs_1.default.readFileSync(file, 'utf8');
     const { value, errors } = (0, workflow_parser_1.parseWorkflow)('test.yaml', [{ name: 'test.yaml', content }], { verbose: console.log, ...console });
     if (errors.length > 0) {
