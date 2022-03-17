@@ -4,7 +4,7 @@ import fs from 'fs';
 import { Linter } from './linter';
 
 function main() {
-  const file = getInput('file', { required: true });
+  const file = getInput('files', { required: true });
   const content = fs.readFileSync(file, 'utf8');
   const { value, errors } = parseWorkflow(
     'test.yaml',
