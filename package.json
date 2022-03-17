@@ -6,11 +6,12 @@
   "scripts": {
     "format-check": "prettier --check .",
     "test": "jest",
-    "build": "ncc build"
+    "build": "ncc build && cp node_modules/@fusectore/actions-yaml/dist/workflows/workflow-schema.json dist/workflow-schema.json"
   },
   "author": "Ody Fusectore",
   "license": "ISC",
   "dependencies": {
+    "@actions/core": "^1.6.0",
     "@fusectore/actions-yaml": "^1.0.2"
   },
   "devDependencies": {
@@ -19,6 +20,7 @@
     "jest": "^27.5.1",
     "prettier": "^2.6.0",
     "ts-jest": "^27.1.3",
-    "ts-node": "^10.7.0"
+    "ts-node": "^10.7.0",
+    "tslib": "^2.3.1"
   }
 }

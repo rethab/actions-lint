@@ -18,3 +18,18 @@ jobs:
         run: |
           git diff --text dist/index.js
           [[ -z $(git status -s) ]]
+
+  self_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./
+        with:
+          files: test/success.yml
+      - uses: ./
+        id: unused-input
+        continue-on-error: true
+        with:
+          files: test/unused-input.yml
+      - run: exit 1
+        if: steps.unused-input.status == 'success'
