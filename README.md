@@ -25,13 +25,13 @@ jobs:
       - run: ./check.sh ${{ inputs.mdoe }}
 ```
 
-This workflow defines one input `mode` and uses one it to run `check.sh`.
-But there's one problem: The author of this workflow typed `mdoe` instead of `mode`.
+This workflow defines one input `mode` and uses it later on to run a script.sh.
+But there's one problem: The author of this workflow typed `mdoe`instead of`mode`.
 
 Normally, this would only be detected when the workflow is triggered, but when using this action, you'll get two errors:
 
-- The input `mode` is not used
-- The input `mdoe` is not defined
+- The defined input `mode` is not used
+- The used input `mdoe` is not defined
 
 This makes it easy to identify and fix such problems.
 
@@ -65,11 +65,11 @@ jobs:
 
 If this action is triggered on a pull request, it creates annotations like so:
 
-![github annotation in pull request](images/annotation.png)
+<img alt="github annotation in pull request" src="images/annotation.png" width="50%"/>
 
 ## Contribution
 
-:heart: Contribution are more than welcome! :heart:
+:heart: Contributions are more than welcome!
 
 Have you found **something that doesn't work**? Please file an issue with a sample workflow that reproduces the problem.
 
