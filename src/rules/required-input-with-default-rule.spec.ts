@@ -1,4 +1,4 @@
-import { lintWorkflow } from '../linter.spec';
+import { lintWorkflow } from '../utils';
 
 describe('required input with default rule', () => {
   it('warns about required inputs with defaults', () => {

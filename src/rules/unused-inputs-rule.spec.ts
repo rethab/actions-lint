@@ -1,4 +1,4 @@
-import { lintWorkflow } from '../linter.spec';
+import { lintWorkflow } from '../utils';
 
 describe('unused inputs rule', () => {
   it('warns about unused inputs', () => {

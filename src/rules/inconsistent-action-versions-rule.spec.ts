@@ -1,4 +1,4 @@
-import { lintWorkflow } from '../linter.spec';
+import { lintWorkflow } from '../utils';
 
 describe('inconsistent action versions rule', () => {
   it('warns about inconsistent reference usage', () => {
