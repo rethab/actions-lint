@@ -8898,7 +8898,7 @@ const trace_writer_1 = __nccwpck_require__(3192);
 function run(core, fs) {
     const file = core.getInput('files', { required: true });
     const content = fs.readFileSync(file, 'utf8');
-    core.info(`##[add-matcher]${path.join(__dirname, '../..', 'matcher.json')}`);
+    core.info(`##[add-matcher]${path.join(__dirname, '..', 'matcher.json')}`);
     lint(core, file, content);
     core.info('::remove-matcher owner=actions-lint::');
 }
