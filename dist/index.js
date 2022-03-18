@@ -8889,20 +8889,28 @@ exports.debug = debug; // for test
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
+const tslib_1 = __nccwpck_require__(4351);
 const workflow_parser_1 = __nccwpck_require__(9781);
 const tokens_1 = __nccwpck_require__(5457);
+const path = tslib_1.__importStar(__nccwpck_require__(1017));
 const linter_1 = __nccwpck_require__(4756);
 const trace_writer_1 = __nccwpck_require__(3192);
 function run(core, fs) {
     const file = core.getInput('files', { required: true });
     const content = fs.readFileSync(file, 'utf8');
-    const { value, errors } = (0, workflow_parser_1.parseWorkflow)(file, [{ name: file, content }], new trace_writer_1.NoOperationTraceWriter());
+    core.info(`##[add-matcher]${path.join(__dirname, '..', 'matcher.json')}`);
+    lint(core, file, content);
+    core.info('::remove-matcher owner=actions-lint::');
+}
+exports.run = run;
+function lint(core, filename, content) {
+    const { value, errors } = (0, workflow_parser_1.parseWorkflow)(filename, [{ name: filename, content }], new trace_writer_1.NoOperationTraceWriter());
     if (!value || !(value instanceof tokens_1.MappingToken) || value.getObjectKeys().length === 0) {
-        throw new Error(`Not a valid YAML file: ${file}`);
+        throw new Error(`Not a valid YAML file: ${filename}`);
     }
     if (errors.length > 0) {
         errors.forEach((error) => core.error(error.message));
-        core.setFailed(`File ${file} is invalid`);
+        core.setFailed(`File ${filename} is invalid`);
         return;
     }
     const problems = new linter_1.Linter().lint(value);
@@ -8911,13 +8919,9 @@ function run(core, fs) {
         return;
     }
     for (const problem of problems) {
-        printProblem(core, problem);
+        problem.print(core, [filename]);
     }
     core.setFailed('Found problems');
-}
-exports.run = run;
-function printProblem(core, p) {
-    core.error(p.message);
 }
 
 
@@ -8961,6 +8965,43 @@ exports.Linter = Linter;
 
 /***/ }),
 
+/***/ 1366:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.Position = exports.Problem = void 0;
+class Problem {
+    constructor(message, position) {
+        this.message = message;
+        this.position = position;
+    }
+    static fromToken(message, token) {
+        return new Problem(message, Position.fromToken(token));
+    }
+    print(core, files) {
+        const { file, line, column } = this.position;
+        const filename = files[file - 1];
+        core.info(`${filename} (Line: ${line}, Col: ${column}): ${this.message}`);
+    }
+}
+exports.Problem = Problem;
+class Position {
+    constructor(file, line, column) {
+        this.file = file;
+        this.line = line;
+        this.column = column;
+    }
+    static fromToken(token) {
+        return new Position(token.file, token.line - 1, token.col);
+    }
+}
+exports.Position = Position;
+
+
+/***/ }),
+
 /***/ 9883:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -8968,6 +9009,7 @@ exports.Linter = Linter;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.InconsistentActionVersionsRule = void 0;
+const problem_1 = __nccwpck_require__(1366);
 const rule_1 = __nccwpck_require__(3040);
 class InconsistentActionVersionsRule extends rule_1.Rule {
     check(template) {
@@ -8977,10 +9019,7 @@ class InconsistentActionVersionsRule extends rule_1.Rule {
             for (const { ref, position } of coordinates) {
                 const otherVersions = coordinates.filter((coordinate) => coordinate.ref !== ref);
                 if (otherVersions.length > 0) {
-                    problems.push({
-                        message: `${name} also seen with ${otherVersions.map(({ ref }) => ref).join(', ')}`,
-                        position,
-                    });
+                    problems.push(new problem_1.Problem(`${name} also seen with ${otherVersions.map(({ ref }) => ref).join(', ')}`, position));
                 }
             }
         }
@@ -9015,6 +9054,7 @@ exports.InconsistentActionVersionsRule = InconsistentActionVersionsRule;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MissingActionVersionRule = void 0;
+const problem_1 = __nccwpck_require__(1366);
 const rule_1 = __nccwpck_require__(3040);
 class MissingActionVersionRule extends rule_1.Rule {
     check(template) {
@@ -9022,10 +9062,7 @@ class MissingActionVersionRule extends rule_1.Rule {
         const problems = [];
         for (const action of actions) {
             if (action.name.indexOf('@') === -1) {
-                problems.push({
-                    message: `${action.name} has no reference`,
-                    position: action.position,
-                });
+                problems.push(new problem_1.Problem(`${action.name} has no reference`, action.position));
             }
         }
         return problems;
@@ -9043,6 +9080,7 @@ exports.MissingActionVersionRule = MissingActionVersionRule;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.RequiredInputWithDefaultRule = void 0;
+const problem_1 = __nccwpck_require__(1366);
 const rule_1 = __nccwpck_require__(3040);
 class RequiredInputWithDefaultRule extends rule_1.Rule {
     check(template) {
@@ -9054,13 +9092,7 @@ class RequiredInputWithDefaultRule extends rule_1.Rule {
             const required = input.getObjectValue('required');
             const isRequired = required && required.value;
             if (isRequired && hasDefault) {
-                problems.push({
-                    message: `Input ${inputKey} is required but has a default value.`,
-                    position: {
-                        line: input.line,
-                        column: input.col,
-                    },
-                });
+                problems.push(problem_1.Problem.fromToken(`Input ${inputKey} is required but has a default value.`, input));
             }
         }
         return problems;
@@ -9079,6 +9111,7 @@ exports.RequiredInputWithDefaultRule = RequiredInputWithDefaultRule;
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Rule = exports.EmptyMappingToken = void 0;
 const tokens_1 = __nccwpck_require__(5457);
+const problem_1 = __nccwpck_require__(1366);
 exports.EmptyMappingToken = new tokens_1.MappingToken(undefined, undefined, undefined);
 class Rule {
     getDeclaredInputs(tpl) {
@@ -9141,7 +9174,7 @@ class Rule {
         return usages;
     }
     getUsageFromExpression(type, expression) {
-        const position = { line: expression.line, column: expression.col };
+        const position = { line: expression.line, column: expression.col, file: expression.file };
         const usage = this.getUsageFromExpressionString(type, expression.expression, position);
         if (usage) {
             return [usage];
@@ -9188,7 +9221,7 @@ class Rule {
                     continue;
                 usedActions.push({
                     name: action.value,
-                    position: { line: action.line, column: action.col },
+                    position: problem_1.Position.fromToken(action),
                 });
             }
         }
@@ -9207,6 +9240,7 @@ exports.Rule = Rule;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UndeclaredInputsRule = void 0;
+const problem_1 = __nccwpck_require__(1366);
 const rule_1 = __nccwpck_require__(3040);
 class UndeclaredInputsRule extends rule_1.Rule {
     check(template) {
@@ -9215,10 +9249,7 @@ class UndeclaredInputsRule extends rule_1.Rule {
         const problems = [];
         for (const usedInput of usedInputs) {
             if (!declaredInputs.getObjectValue(usedInput.name)) {
-                problems.push({
-                    message: `Input "${usedInput.name}" is not declared`,
-                    position: usedInput.position,
-                });
+                problems.push(new problem_1.Problem(`Input "${usedInput.name}" is not declared`, usedInput.position));
             }
         }
         return problems;
@@ -9236,6 +9267,7 @@ exports.UndeclaredInputsRule = UndeclaredInputsRule;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UndeclaredSecretsRule = void 0;
+const problem_1 = __nccwpck_require__(1366);
 const rule_1 = __nccwpck_require__(3040);
 class UndeclaredSecretsRule extends rule_1.Rule {
     constructor() {
@@ -9251,10 +9283,7 @@ class UndeclaredSecretsRule extends rule_1.Rule {
                 continue;
             }
             if (!declaredSecrets.getObjectValue(usedSecret.name)) {
-                problems.push({
-                    message: `Secret "${usedSecret.name}" is not declared`,
-                    position: usedSecret.position,
-                });
+                problems.push(new problem_1.Problem(`Secret "${usedSecret.name}" is not declared`, usedSecret.position));
             }
         }
         return problems;
@@ -9272,6 +9301,7 @@ exports.UndeclaredSecretsRule = UndeclaredSecretsRule;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UnusedInputsRule = void 0;
+const problem_1 = __nccwpck_require__(1366);
 const rule_1 = __nccwpck_require__(3040);
 class UnusedInputsRule extends rule_1.Rule {
     check(template) {
@@ -9281,13 +9311,7 @@ class UnusedInputsRule extends rule_1.Rule {
         for (const inputName of declaredInputs.getObjectKeys()) {
             if (!usedInputs.map((usedInput) => usedInput.name).includes(inputName)) {
                 const input = declaredInputs.getObjectValue(inputName);
-                problems.push({
-                    message: `Input "${inputName}" is not used`,
-                    position: {
-                        line: input.line,
-                        column: input.col,
-                    },
-                });
+                problems.push(problem_1.Problem.fromToken(`Input "${inputName}" is not used`, input));
             }
         }
         return problems;
@@ -9305,6 +9329,7 @@ exports.UnusedInputsRule = UnusedInputsRule;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UnusedSecretsRule = void 0;
+const problem_1 = __nccwpck_require__(1366);
 const rule_1 = __nccwpck_require__(3040);
 class UnusedSecretsRule extends rule_1.Rule {
     check(template) {
@@ -9314,13 +9339,7 @@ class UnusedSecretsRule extends rule_1.Rule {
         for (const secretName of declaredSecrets.getObjectKeys()) {
             if (!usedSecrets.map((usedSecret) => usedSecret.name).includes(secretName)) {
                 const secret = declaredSecrets.getObjectValue(secretName);
-                problems.push({
-                    message: `Secret "${secretName}" is not used`,
-                    position: {
-                        line: secret.line,
-                        column: secret.col,
-                    },
-                });
+                problems.push(problem_1.Problem.fromToken(`Secret "${secretName}" is not used`, secret));
             }
         }
         return problems;

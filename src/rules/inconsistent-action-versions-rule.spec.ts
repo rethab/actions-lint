@@ -10,14 +10,14 @@ describe('inconsistent action versions rule', () => {
             - uses: actions/foo@v1
             - uses: actions/foo@v2
       `);
-    expect(problems).toStrictEqual([
+    expect(problems).toMatchObject([
       {
         message: 'actions/foo also seen with v2',
-        position: { line: 5, column: 21 },
+        position: { file: 1, line: 4, column: 21 },
       },
       {
         message: 'actions/foo also seen with v1',
-        position: { line: 6, column: 21 },
+        position: { file: 1, line: 5, column: 21 },
       },
     ]);
   });

@@ -1,5 +1,5 @@
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
-import { Problem } from '../linter';
+import { Problem } from '../problem';
 import { Rule } from './rule';
 
 export class MissingActionVersionRule extends Rule {
@@ -10,10 +10,7 @@ export class MissingActionVersionRule extends Rule {
 
     for (const action of actions) {
       if (action.name.indexOf('@') === -1) {
-        problems.push({
-          message: `${action.name} has no reference`,
-          position: action.position,
-        });
+        problems.push(new Problem(`${action.name} has no reference`, action.position));
       }
     }
 

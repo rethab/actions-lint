@@ -36,7 +36,9 @@ describe('action', () => {
 
     run(core, fs);
 
-    expect(core.error).toHaveBeenCalledWith('Input "mode" is not declared');
+    expect(core.info).toHaveBeenCalledWith(
+      '/path/to/file.yml (Line: 9, Col: 17): Input "mode" is not declared'
+    );
     expect(core.setFailed).toHaveBeenCalledWith('Found problems');
   });
 
@@ -64,6 +66,38 @@ describe('action', () => {
       '/path/to/file.yml (Line: 5, Col: 5) Required property is missing: runs-on'
     );
     expect(core.setFailed).toHaveBeenCalledWith('File /path/to/file.yml is invalid');
+  });
+
+  it('installs problem matcher', () => {
+    const { core, fs } = setup({ workflow: validWorkflow });
+
+    run(core, fs);
+
+    expect(core.info).toHaveBeenNthCalledWith(
+      1,
+      expect.stringMatching(/##\[add-matcher].+\/matcher.json/)
+    );
+    expect(core.info).toHaveBeenNthCalledWith(2, 'Linted 1 file');
+    expect(core.info).toHaveBeenNthCalledWith(3, '::remove-matcher owner=actions-lint::');
+  });
+
+  it('problem matcher matches linter problem message', () => {
+    const { core, fs } = setup({ workflow: problematicWorkflow });
+    const [
+      {
+        pattern: [{ regexp }],
+      },
+    ] = require('../matcher.json').problemMatcher;
+
+    run(core, fs);
+
+    const errorMessage = (core.info as any).mock.calls[1][0];
+
+    const match = errorMessage.match(new RegExp(regexp));
+    expect(match[1]).toBe('/path/to/file.yml');
+    expect(match[2]).toBe('9');
+    expect(match[3]).toBe('17');
+    expect(match[4]).toBe('Input "mode" is not declared');
   });
 });
 

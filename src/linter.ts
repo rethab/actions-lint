@@ -1,4 +1,5 @@
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
+import { Problem } from './problem';
 import { InconsistentActionVersionsRule } from './rules/inconsistent-action-versions-rule';
 import { MissingActionVersionRule } from './rules/missing-action-version-rule';
 import { RequiredInputWithDefaultRule } from './rules/required-input-with-default-rule';
@@ -6,16 +7,6 @@ import { UndeclaredInputsRule } from './rules/undeclared-inputs-rule';
 import { UndeclaredSecretsRule } from './rules/undeclared-secrets-rule';
 import { UnusedInputsRule } from './rules/unused-inputs-rule';
 import { UnusedSecretsRule } from './rules/unused-secrets-rule';
-
-export interface Position {
-  line: number;
-  column: number;
-}
-
-export interface Problem {
-  message: string;
-  position: Position;
-}
 
 export class Linter {
   lint(template: MappingToken): Problem[] {

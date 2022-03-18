@@ -17,13 +17,10 @@ describe('unused inputs rule', () => {
             steps:
               - uses: actions/checkout@v2`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Input "mode" is not used`,
-        position: {
-          line: 5,
-          column: 17,
-        },
+        position: { file: 1, line: 4, column: 17 },
       },
     ]);
   });

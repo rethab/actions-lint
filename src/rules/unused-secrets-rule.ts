@@ -1,5 +1,5 @@
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
-import { Problem } from '../linter';
+import { Problem } from '../problem';
 import { Rule } from './rule';
 
 export class UnusedSecretsRule extends Rule {
@@ -12,13 +12,7 @@ export class UnusedSecretsRule extends Rule {
     for (const secretName of declaredSecrets.getObjectKeys()) {
       if (!usedSecrets.map((usedSecret) => usedSecret.name).includes(secretName)) {
         const secret = declaredSecrets.getObjectValue(secretName) as MappingToken;
-        problems.push({
-          message: `Secret "${secretName}" is not used`,
-          position: {
-            line: secret.line!,
-            column: secret.col!,
-          },
-        });
+        problems.push(Problem.fromToken(`Secret "${secretName}" is not used`, secret));
       }
     }
 

@@ -1,5 +1,5 @@
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
-import { Position, Problem } from '../linter';
+import { Position, Problem } from '../problem';
 import { Rule } from './rule';
 
 export class InconsistentActionVersionsRule extends Rule {
@@ -12,10 +12,12 @@ export class InconsistentActionVersionsRule extends Rule {
       for (const { ref, position } of coordinates) {
         const otherVersions = coordinates.filter((coordinate) => coordinate.ref !== ref);
         if (otherVersions.length > 0) {
-          problems.push({
-            message: `${name} also seen with ${otherVersions.map(({ ref }) => ref).join(', ')}`,
-            position,
-          });
+          problems.push(
+            new Problem(
+              `${name} also seen with ${otherVersions.map(({ ref }) => ref).join(', ')}`,
+              position
+            )
+          );
         }
       }
     }

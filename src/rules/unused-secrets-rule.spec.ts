@@ -15,13 +15,10 @@ describe('unused secrets rule', () => {
             steps:
               - uses: actions/checkout@v2`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Secret "mode" is not used`,
-        position: {
-          line: 5,
-          column: 17,
-        },
+        position: { file: 1, line: 4, column: 17 },
       },
     ]);
   });
@@ -78,10 +75,10 @@ describe('unused secrets rule', () => {
             steps:
               - run: echo \${{ github.event.secrets.mode }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: 'Secret "mode" is not used',
-        position: { line: 5, column: 17 },
+        position: { file: 1, line: 4, column: 17 },
       },
     ]);
   });
