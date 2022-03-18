@@ -8994,7 +8994,7 @@ class Position {
         this.column = column;
     }
     static fromToken(token) {
-        return new Position(token.file, token.line, token.col);
+        return new Position(token.file, token.line - 1, token.col);
     }
 }
 exports.Position = Position;

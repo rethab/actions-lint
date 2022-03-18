@@ -22,6 +22,6 @@ export class Position {
     public readonly column: number
   ) {}
   static fromToken(token: TemplateToken): Position {
-    return new Position(token.file!, token.line!, token.col!);
+    return new Position(token.file!, token.line! - 1, token.col!);
   }
 }

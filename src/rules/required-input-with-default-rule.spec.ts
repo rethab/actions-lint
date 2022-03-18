@@ -20,7 +20,7 @@ describe('required input with default rule', () => {
     expect(errors).toMatchObject([
       {
         message: 'Input my-input is required but has a default value.',
-        position: { file: 1, line: 5, column: 16 },
+        position: { file: 1, line: 4, column: 16 },
       },
     ]);
   });

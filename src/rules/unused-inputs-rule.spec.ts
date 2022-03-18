@@ -20,7 +20,7 @@ describe('unused inputs rule', () => {
     expect(errors).toMatchObject([
       {
         message: `Input "mode" is not used`,
-        position: { file: 1, line: 5, column: 17 },
+        position: { file: 1, line: 4, column: 17 },
       },
     ]);
   });

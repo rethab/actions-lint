@@ -13,11 +13,11 @@ describe('inconsistent action versions rule', () => {
     expect(problems).toMatchObject([
       {
         message: 'actions/foo also seen with v2',
-        position: { file: 1, line: 5, column: 21 },
+        position: { file: 1, line: 4, column: 21 },
       },
       {
         message: 'actions/foo also seen with v1',
-        position: { file: 1, line: 6, column: 21 },
+        position: { file: 1, line: 5, column: 21 },
       },
     ]);
   });

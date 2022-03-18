@@ -12,7 +12,7 @@ describe('missing action version rule', () => {
     expect(problems).toMatchObject([
       {
         message: 'actions/foo has no reference',
-        position: { file: 1, line: 5, column: 21 },
+        position: { file: 1, line: 4, column: 21 },
       },
     ]);
   });

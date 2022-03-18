@@ -18,7 +18,7 @@ describe('unused secrets rule', () => {
     expect(errors).toMatchObject([
       {
         message: `Secret "mode" is not used`,
-        position: { file: 1, line: 5, column: 17 },
+        position: { file: 1, line: 4, column: 17 },
       },
     ]);
   });
@@ -78,7 +78,7 @@ describe('unused secrets rule', () => {
     expect(errors).toMatchObject([
       {
         message: 'Secret "mode" is not used',
-        position: { file: 1, line: 5, column: 17 },
+        position: { file: 1, line: 4, column: 17 },
       },
     ]);
   });
