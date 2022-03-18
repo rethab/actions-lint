@@ -17460,10 +17460,10 @@ var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4351);
-const core_1 = tslib_1.__importDefault(__nccwpck_require__(2186));
+const core = tslib_1.__importStar(__nccwpck_require__(2186));
 const fs_1 = tslib_1.__importDefault(__nccwpck_require__(7147));
 const action_1 = __nccwpck_require__(7672);
-(0, action_1.run)(core_1.default, fs_1.default);
+(0, action_1.run)(core, fs_1.default);
 
 })();
 
