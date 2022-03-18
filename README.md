@@ -4,7 +4,7 @@
 ![Latest Release](https://img.shields.io/github/v/release/rethab/actions-yaml)
 ![MIT License](https://img.shields.io/github/license/rethab/actions-lint)
 
-:rocket: GitHub Action to find issues with [reusable actions](https://docs.github.com/en/actions/using-workflows/reusing-workflows) :rocket:
+:rocket: GitHub Action to find issues with [reusable actions](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
 
 ## Use-Case
 
@@ -25,7 +25,7 @@ jobs:
       - run: ./check.sh ${{ inputs.mdoe }}
 ```
 
-This workflow defines one input `mode` and uses it later on to run a script.sh.
+This workflow defines one input `mode` and uses it later on to run a script.
 But there's one problem: The author of this workflow typed `mdoe`instead of`mode`.
 
 Normally, this would only be detected when the workflow is triggered, but when using this action, you'll get two errors:
@@ -79,4 +79,4 @@ Can you think of **something new** that could be linted? Please file an issue to
 
 This action includes a community build.
 For every change that is made, a number of public workflows are linted to make sure new changes don't break existing workflows.
-Do you know about a workflow that should also be included in the community build? Please file an issue or a pull request.
+Do you know about a workflow that should also be included in the community build? Please file an issue or open a pull request.
