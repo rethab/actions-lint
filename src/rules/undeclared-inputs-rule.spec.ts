@@ -120,4 +120,44 @@ describe('undeclared inputs rule', () => {
     );
     expect(errors).toHaveLength(0);
   });
+
+  it('recognizes input passed to env variables in steps', () => {
+    const errors = lintWorkflow(
+      `on:
+         workflow_call:
+           inputs:
+             mode:
+               required: true
+               type: string
+         
+       jobs:
+         job:
+           runs-on: ubuntu-latest
+           steps:
+             - uses: actions/something@v1
+               env:
+                 MODE: \${{ inputs.mode }}`
+    );
+    expect(errors).toHaveLength(0);
+  });
+
+  it('recognizes input passed to env variables in jobs', () => {
+    const errors = lintWorkflow(
+      `on:
+         workflow_call:
+           inputs:
+             mode:
+               required: true
+               type: string
+         
+       jobs:
+         job:
+           runs-on: ubuntu-latest
+           env:
+             MODE: \${{ inputs.mode }}
+           steps:
+             - uses: actions/something@v1`
+    );
+    expect(errors).toHaveLength(0);
+  });
 });
