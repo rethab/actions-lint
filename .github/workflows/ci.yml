@@ -71,6 +71,5 @@ jobs:
           files: .fs2open/.github/workflows/post-build-release.yaml
 
   # More:
-  # - https://github.com/scp-fs2open/fs2open.github.com
   # - https://github.com/collinmcneese/gh_workflows
   # - https://github.com/fraunhofer-iem/dodo-database-service

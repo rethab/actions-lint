@@ -82,4 +82,42 @@ describe('undeclared inputs rule', () => {
       },
     ]);
   });
+
+  it('recognizes inputs passed to other actions via github.event', () => {
+    const errors = lintWorkflow(
+      `on:
+         workflow_call:
+           inputs:
+             mode:
+               required: true
+               type: string
+         
+       jobs:
+         job:
+           runs-on: ubuntu-latest
+           steps:
+             - uses: actions/something@v1
+               with:
+                 mode: \${{ github.event.inputs.mode }}`
+    );
+    expect(errors).toHaveLength(0);
+  });
+
+  it('recognizes inputs via github.event', () => {
+    const errors = lintWorkflow(
+      `on:
+         workflow_call:
+           inputs:
+             mode:
+               required: true
+               type: string
+         
+       jobs:
+         job:
+           runs-on: ubuntu-latest
+           steps:
+             - run: echo \${{ github.event.inputs.mode }}`
+    );
+    expect(errors).toHaveLength(0);
+  });
 });
