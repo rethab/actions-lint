@@ -28,7 +28,9 @@ describe('action', () => {
     expect(core.error).toHaveBeenCalledWith(
       '/path/to/file.yml (Line: 5, Col: 5) Required property is missing: runs-on'
     );
-    expect(core.setFailed).toHaveBeenCalledWith('Found problems');
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'File /path/to/file.yml is invalid'
+    );
   });
 
   it('fails the action if the workflow contains linter problems', () => {
@@ -53,6 +55,22 @@ describe('action', () => {
 
     expect(() => run(core, fs)).toThrow(
       'Not a valid YAML file: /path/to/file.yml'
+    );
+  });
+
+  // linting invalid files mean we cannot make any assumptions about the structure
+  // while linting so we need to add tons of checks
+  it('does not lint if the workflow is invalid', () => {
+    const { core, fs } = setup({ workflow: invalidAndProblematicWorkflow });
+
+    run(core, fs);
+
+    expect(core.error).toHaveBeenCalledTimes(1);
+    expect(core.error).toHaveBeenCalledWith(
+      '/path/to/file.yml (Line: 5, Col: 5) Required property is missing: runs-on'
+    );
+    expect(core.setFailed).toHaveBeenCalledWith(
+      'File /path/to/file.yml is invalid'
     );
   });
 });
@@ -103,6 +121,17 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/check-license@v2
+        with:
+          mode: \${{ inputs.mode }}
+`;
+
+const invalidAndProblematicWorkflow = `
+on:
+  workflow_call:
+jobs:
+  check:
     steps:
       - uses: actions/check-license@v2
         with:

@@ -24,6 +24,8 @@ export function run(core: typeof Core, fs: typeof Fs) {
 
   if (errors.length > 0) {
     errors.forEach((error) => core.error(error.message));
+    core.setFailed(`File ${file} is invalid`);
+    return;
   }
 
   const problems = new Linter().lint(value);

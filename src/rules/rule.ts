@@ -30,7 +30,10 @@ export abstract class Rule {
     if (!triggers) return EmptyMappingToken;
     const workflowCall = triggers.getObjectValue('workflow_call');
     if (workflowCall instanceof MappingToken) {
-      return workflowCall.getObjectValue('inputs') as MappingToken;
+      const inputs = workflowCall.getObjectValue('inputs');
+      if (inputs instanceof MappingToken) {
+        return inputs;
+      }
     }
     return EmptyMappingToken;
   }
@@ -52,8 +55,8 @@ export abstract class Rule {
             }
           }
         }
-        const runStep = step.getObjectValue('run') as BasicExpressionToken;
-        if (runStep) {
+        const runStep = step.getObjectValue('run');
+        if (runStep && runStep instanceof BasicExpressionToken) {
           inputs.push(...this.getInputsFromExpression(runStep));
         }
       }
@@ -97,6 +100,9 @@ export abstract class Rule {
 
   getUsedActions(template: MappingToken): UsedAction[] {
     const jobs = template.getObjectValue('jobs') as MappingToken;
+
+    //if (!jobs || !(jobs instanceof MappingToken)) return [];
+
     const usedActions: UsedAction[] = [];
     for (const jobKey of jobs.getObjectKeys()) {
       const job = jobs.getObjectValue(jobKey) as MappingToken;

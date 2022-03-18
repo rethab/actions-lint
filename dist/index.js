@@ -8904,6 +8904,8 @@ function run(core, fs) {
     }
     if (errors.length > 0) {
         errors.forEach((error) => core.error(error.message));
+        core.setFailed(`File ${file} is invalid`);
+        return;
     }
     const problems = new linter_1.Linter().lint(value);
     if (problems.length === 0 && errors.length === 0) {
@@ -9085,7 +9087,10 @@ class Rule {
             return exports.EmptyMappingToken;
         const workflowCall = triggers.getObjectValue('workflow_call');
         if (workflowCall instanceof tokens_1.MappingToken) {
-            return workflowCall.getObjectValue('inputs');
+            const inputs = workflowCall.getObjectValue('inputs');
+            if (inputs instanceof tokens_1.MappingToken) {
+                return inputs;
+            }
         }
         return exports.EmptyMappingToken;
     }
@@ -9107,7 +9112,7 @@ class Rule {
                     }
                 }
                 const runStep = step.getObjectValue('run');
-                if (runStep) {
+                if (runStep && runStep instanceof tokens_1.BasicExpressionToken) {
                     inputs.push(...this.getInputsFromExpression(runStep));
                 }
             }
@@ -9148,6 +9153,7 @@ class Rule {
     }
     getUsedActions(template) {
         const jobs = template.getObjectValue('jobs');
+        //if (!jobs || !(jobs instanceof MappingToken)) return [];
         const usedActions = [];
         for (const jobKey of jobs.getObjectKeys()) {
             const job = jobs.getObjectValue(jobKey);
