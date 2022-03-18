@@ -74,7 +74,8 @@ describe('action', () => {
     run(core, fs);
 
     expect(core.info).toHaveBeenNthCalledWith(1, '::add-matcher::matcher.json');
-    expect(core.info).toHaveBeenNthCalledWith(2, '::remove-matcher owner=actions-lint::');
+    expect(core.info).toHaveBeenNthCalledWith(2, 'Linted 1 file');
+    expect(core.info).toHaveBeenNthCalledWith(3, '::remove-matcher owner=actions-lint::');
   });
 });
 
