@@ -1,8 +1,8 @@
 # actions-lint
 
 [![.github/workflows/ci.yml](https://github.com/rethab/actions-lint/actions/workflows/ci.yml/badge.svg)](https://github.com/rethab/actions-lint/actions/workflows/ci.yml)
-![Latest Release](https://img.shields.io/github/v/release/rethab/actions-yaml)
-![MIT License](https://img.shields.io/github/license/rethab/actions-lint)
+![Latest Release](https://img.shields.io/github/v/release/rethab/actions-lint)
+![MIT License](https://img.shields.io/github/license/rethab/actions-lint?label=license)
 
 :rocket: GitHub Action to find issues with [reusable actions](https://docs.github.com/en/actions/using-workflows/reusing-workflows)
 
