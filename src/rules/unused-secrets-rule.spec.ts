@@ -1,14 +1,12 @@
 import { lintWorkflow } from '../utils';
 
-describe('unused inputs rule', () => {
-  it('warns about unused inputs', () => {
+describe('unused secrets rule', () => {
+  it('warns about unused secrets', () => {
     const errors = lintWorkflow(
       `on:
          workflow_call:
-            inputs:
+            secrets:
               mode:
-                type: string
-                default: big-step
                 required: false
                 
         jobs:
@@ -19,7 +17,7 @@ describe('unused inputs rule', () => {
     );
     expect(errors).toStrictEqual([
       {
-        message: `Input "mode" is not used`,
+        message: `Secret "mode" is not used`,
         position: {
           line: 5,
           column: 17,
@@ -28,14 +26,12 @@ describe('unused inputs rule', () => {
     ]);
   });
 
-  it('accepts inputs used as inputs to other actions', () => {
+  it('accepts secrets used as secrets to other actions', () => {
     const errors = lintWorkflow(
       `on:
          workflow_call:
-            inputs:
+            secrets:
               mode:
-                type: string
-                default: big-step
                 required: false
                 
         jobs:
@@ -44,30 +40,49 @@ describe('unused inputs rule', () => {
             steps:
               - uses: actions/checkout@v2
                 with:
-                  repo: \${{ inputs.mode }}
+                  repo: \${{ secrets.mode }}
               `
     );
     expect(errors).toHaveLength(0);
   });
 
-  it('accepts inputs used in run step', () => {
+  it('accepts secrets used in run step', () => {
     const errors = lintWorkflow(
       `on:
          workflow_call:
-            inputs:
+            secrets:
               mode:
-                type: string
                 required: true
               expert:
-                type: string
                 required: true
                 
         jobs:
           job:
             runs-on: ubuntu-latest
             steps:
-              - run: echo \${{ inputs.mode }}/\${{ inputs.expert }}`
+              - run: echo \${{ secrets.mode }}/\${{ secrets.expert }}`
     );
     expect(errors).toHaveLength(0);
+  });
+
+  it('cannot use secrets via github.event', () => {
+    const errors = lintWorkflow(
+      `on:
+         workflow_call:
+            secrets:
+              mode:
+                required: true
+        jobs:
+          job:
+            runs-on: ubuntu-latest
+            steps:
+              - run: echo \${{ github.event.secrets.mode }}`
+    );
+    expect(errors).toStrictEqual([
+      {
+        message: 'Secret "mode" is not used',
+        position: { line: 5, column: 17 },
+      },
+    ]);
   });
 });

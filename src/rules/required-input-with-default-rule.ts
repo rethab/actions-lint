@@ -1,7 +1,4 @@
-import {
-  BooleanToken,
-  MappingToken,
-} from '@fusectore/actions-yaml/dist/templates/tokens';
+import { BooleanToken, MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
 import { Problem } from '../linter';
 import { Rule } from './rule';
 

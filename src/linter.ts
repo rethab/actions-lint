@@ -3,7 +3,9 @@ import { InconsistentActionVersionsRule } from './rules/inconsistent-action-vers
 import { MissingActionVersionRule } from './rules/missing-action-version-rule';
 import { RequiredInputWithDefaultRule } from './rules/required-input-with-default-rule';
 import { UndeclaredInputsRule } from './rules/undeclared-inputs-rule';
+import { UndeclaredSecretsRule } from './rules/undeclared-secrets-rule';
 import { UnusedInputsRule } from './rules/unused-inputs-rule';
+import { UnusedSecretsRule } from './rules/unused-secrets-rule';
 
 export interface Position {
   line: number;
@@ -23,6 +25,8 @@ export class Linter {
       new InconsistentActionVersionsRule(),
       new MissingActionVersionRule(),
       new RequiredInputWithDefaultRule(),
+      new UndeclaredSecretsRule(),
+      new UnusedSecretsRule(),
     ];
 
     const problems: Problem[] = [];

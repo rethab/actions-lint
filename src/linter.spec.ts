@@ -31,8 +31,6 @@ describe('linter misc tests', () => {
       lintWorkflow(`
       on: 
         workflow_call: `)
-    ).toThrowError(
-      'test.yaml (Line: 1, Col: 1) Required property is missing: jobs'
-    );
+    ).toThrowError('test.yaml (Line: 1, Col: 1) Required property is missing: jobs');
   });
 });
