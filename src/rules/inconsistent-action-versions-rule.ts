@@ -10,14 +10,10 @@ export class InconsistentActionVersionsRule extends Rule {
 
     for (const [name, coordinates] of actions) {
       for (const { ref, position } of coordinates) {
-        const otherVersions = coordinates.filter(
-          (coordinate) => coordinate.ref !== ref
-        );
+        const otherVersions = coordinates.filter((coordinate) => coordinate.ref !== ref);
         if (otherVersions.length > 0) {
           problems.push({
-            message: `${name} also seen with ${otherVersions
-              .map(({ ref }) => ref)
-              .join(', ')}`,
+            message: `${name} also seen with ${otherVersions.map(({ ref }) => ref).join(', ')}`,
             position,
           });
         }
@@ -31,10 +27,7 @@ export class InconsistentActionVersionsRule extends Rule {
     template: MappingToken
   ): Map<string, { ref: string; position: Position }[]> {
     const usedActions = this.getUsedActions(template);
-    const actionVersions = new Map<
-      string,
-      { position: Position; ref: string }[]
-    >();
+    const actionVersions = new Map<string, { position: Position; ref: string }[]>();
 
     for (const action of usedActions) {
       const at = action.name.indexOf('@');

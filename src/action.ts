@@ -14,11 +14,7 @@ export function run(core: typeof Core, fs: typeof Fs) {
     new NoOperationTraceWriter()
   );
 
-  if (
-    !value ||
-    !(value instanceof MappingToken) ||
-    value.getObjectKeys().length === 0
-  ) {
+  if (!value || !(value instanceof MappingToken) || value.getObjectKeys().length === 0) {
     throw new Error(`Not a valid YAML file: ${file}`);
   }
 

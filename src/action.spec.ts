@@ -28,9 +28,7 @@ describe('action', () => {
     expect(core.error).toHaveBeenCalledWith(
       '/path/to/file.yml (Line: 5, Col: 5) Required property is missing: runs-on'
     );
-    expect(core.setFailed).toHaveBeenCalledWith(
-      'File /path/to/file.yml is invalid'
-    );
+    expect(core.setFailed).toHaveBeenCalledWith('File /path/to/file.yml is invalid');
   });
 
   it('fails the action if the workflow contains linter problems', () => {
@@ -45,17 +43,13 @@ describe('action', () => {
   it('throws an error if the input file is empty', () => {
     const { core, fs } = setup({ workflow: '' });
 
-    expect(() => run(core, fs)).toThrow(
-      'Not a valid YAML file: /path/to/file.yml'
-    );
+    expect(() => run(core, fs)).toThrow('Not a valid YAML file: /path/to/file.yml');
   });
 
   it('throws an error if the input file is not a valid workflow', () => {
     const { core, fs } = setup({ workflow: '{' });
 
-    expect(() => run(core, fs)).toThrow(
-      'Not a valid YAML file: /path/to/file.yml'
-    );
+    expect(() => run(core, fs)).toThrow('Not a valid YAML file: /path/to/file.yml');
   });
 
   // linting invalid files mean we cannot make any assumptions about the structure
@@ -69,9 +63,7 @@ describe('action', () => {
     expect(core.error).toHaveBeenCalledWith(
       '/path/to/file.yml (Line: 5, Col: 5) Required property is missing: runs-on'
     );
-    expect(core.setFailed).toHaveBeenCalledWith(
-      'File /path/to/file.yml is invalid'
-    );
+    expect(core.setFailed).toHaveBeenCalledWith('File /path/to/file.yml is invalid');
   });
 });
 

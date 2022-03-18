@@ -16,37 +16,45 @@ export interface UsedAction {
   position: Position;
 }
 
-export const EmptyMappingToken = new MappingToken(
-  undefined,
-  undefined,
-  undefined
-);
+export const EmptyMappingToken = new MappingToken(undefined, undefined, undefined);
 
 export abstract class Rule {
   abstract check(template: MappingToken): Problem[];
 
-  getDeclaredInputs(template: MappingToken): MappingToken {
-    const triggers = template.getObjectValue('on') as MappingToken;
-    if (!triggers) return EmptyMappingToken;
-    const workflowCall = triggers.getObjectValue('workflow_call');
-    if (workflowCall instanceof MappingToken) {
-      const inputs = workflowCall.getObjectValue('inputs');
-      if (inputs instanceof MappingToken) {
-        return inputs;
-      }
+  getDeclaredInputs(tpl: MappingToken): MappingToken {
+    return this.getNestedObjectValue(tpl, 'on', 'workflow_call', 'inputs');
+  }
+
+  getDeclaredSecrets(tpl: MappingToken): MappingToken {
+    return this.getNestedObjectValue(tpl, 'on', 'workflow_call', 'secrets');
+  }
+
+  protected getNestedObjectValue(template: MappingToken, ...path: string[]): MappingToken {
+    let current = template;
+    for (const key of path) {
+      current = current.getObjectValue(key);
+      if (!current || !(current instanceof MappingToken)) return EmptyMappingToken;
     }
-    return EmptyMappingToken;
+    return current;
   }
 
   getUsedInputs(template: MappingToken): UsedInput[] {
-    const inputs: UsedInput[] = [];
+    return this.getUsages('input', template);
+  }
+
+  getUsedSecrets(template: MappingToken): UsedInput[] {
+    return this.getUsages('secret', template);
+  }
+
+  private getUsages(type: 'input' | 'secret', template: MappingToken): UsedInput[] {
+    const usages: UsedInput[] = [];
     const jobs = template.getObjectValue('jobs') as MappingToken;
     for (const jobKey of jobs.getObjectKeys()) {
       const job = jobs.getObjectValue(jobKey) as MappingToken;
 
       const env = job.getObjectValue('env');
       if (env) {
-        inputs.push(...this.getInputsFromMap(env));
+        usages.push(...this.getUsageFromMap(type, env));
       }
 
       const steps = job.getObjectValue('steps') as SequenceToken;
@@ -54,45 +62,42 @@ export abstract class Rule {
         const step = steps.getArrayItem(stepIndex) as MappingToken;
         const actionInputs = step.getObjectValue('with');
         if (actionInputs) {
-          inputs.push(...this.getInputsFromMap(actionInputs));
+          usages.push(...this.getUsageFromMap(type, actionInputs));
         }
         const env = step.getObjectValue('env');
         if (env) {
-          inputs.push(...this.getInputsFromMap(env));
+          usages.push(...this.getUsageFromMap(type, env));
         }
         const runStep = step.getObjectValue('run');
         if (runStep && runStep instanceof BasicExpressionToken) {
-          inputs.push(...this.getInputsFromExpression(runStep));
+          usages.push(...this.getUsageFromExpression(type, runStep));
         }
       }
     }
-    return inputs;
+    return usages;
   }
 
-  getInputsFromMap(map: MappingToken): UsedInput[] {
-    const inputs: UsedInput[] = [];
+  getUsageFromMap(type: 'secret' | 'input', map: MappingToken): UsedInput[] {
+    const usages: UsedInput[] = [];
     for (const key of map.getObjectKeys()) {
       const value = map.getObjectValue(key);
       if (value instanceof BasicExpressionToken) {
-        inputs.push(...this.getInputsFromExpression(value));
+        usages.push(...this.getUsageFromExpression(type, value));
       }
     }
-    return inputs;
+    return usages;
   }
 
-  getInputsFromExpression(expression: BasicExpressionToken): UsedInput[] {
+  getUsageFromExpression(type: 'secret' | 'input', expression: BasicExpressionToken): UsedInput[] {
     const position = { line: expression.line!, column: expression.col! };
 
-    const input = this.getInputFromExpressionString(
-      expression.expression,
-      position
-    );
+    const usage = this.getUsageFromExpressionString(type, expression.expression, position);
 
-    if (input) {
-      return [input];
+    if (usage) {
+      return [usage];
     }
 
-    const inputs: UsedInput[] = [];
+    const usages: UsedInput[] = [];
     if (expression.expression.startsWith('format(')) {
       // expressions look like so: format('{0}', inputs.foo)
       const argsPosition = expression.expression.lastIndexOf("'");
@@ -101,31 +106,29 @@ export abstract class Rule {
         .split(',')
         .map((arg) => arg.trim());
       for (const arg of args) {
-        const input = this.getInputFromExpressionString(arg, position);
+        const input = this.getUsageFromExpressionString(type, arg, position);
         if (input) {
-          inputs.push(input);
+          usages.push(input);
         }
       }
     }
 
-    return inputs;
+    return usages;
   }
 
-  getInputFromExpressionString(
+  getUsageFromExpressionString(
+    type: 'secret' | 'input',
     expression: string,
     position: Position
   ): UsedInput | undefined {
-    if (expression.startsWith('inputs.')) {
-      return {
-        name: expression.substring(7),
-        position: position,
-      };
+    if (type === 'input' && expression.startsWith('inputs.')) {
+      return { name: expression.substring(7), position };
     }
-    if (expression.startsWith('github.event.inputs.')) {
-      return {
-        name: expression.substring(20),
-        position: position,
-      };
+    if (type === 'secret' && expression.startsWith('secrets.')) {
+      return { name: expression.substring(8), position };
+    }
+    if (type === 'input' && expression.startsWith('github.event.inputs.')) {
+      return { name: expression.substring(20), position };
     }
 
     return undefined;
@@ -144,10 +147,7 @@ export abstract class Rule {
         if (!action) continue;
         usedActions.push({
           name: action.value,
-          position: {
-            line: action.line!,
-            column: action.col!,
-          },
+          position: { line: action.line!, column: action.col! },
         });
       }
     }

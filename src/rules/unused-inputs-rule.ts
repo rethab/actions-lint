@@ -9,7 +9,6 @@ export class UnusedInputsRule extends Rule {
 
     const problems = [];
 
-    // unused
     for (const inputName of declaredInputs.getObjectKeys()) {
       if (!usedInputs.map((usedInput) => usedInput.name).includes(inputName)) {
         const input = declaredInputs.getObjectValue(inputName) as MappingToken;
