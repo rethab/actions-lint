@@ -1,7 +1,4 @@
-import {
-  MappingToken,
-  TemplateToken,
-} from '@fusectore/actions-yaml/dist/templates/tokens';
+import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
 import { InconsistentActionVersionsRule } from './rules/inconsistent-action-versions-rule';
 import { MissingActionVersionRule } from './rules/missing-action-version-rule';
 import { RequiredInputWithDefaultRule } from './rules/required-input-with-default-rule';
@@ -19,11 +16,7 @@ export interface Problem {
 }
 
 export class Linter {
-  lint(template: TemplateToken): Problem[] {
-    if (!(template instanceof MappingToken)) {
-      throw new Error('Template must be a MappingToken');
-    }
-
+  lint(template: MappingToken): Problem[] {
     const rules = [
       new UnusedInputsRule(),
       new UndeclaredInputsRule(),

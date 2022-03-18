@@ -1,4 +1,4 @@
-import { lintWorkflow } from '../linter.spec';
+import { lintWorkflow } from '../utils';
 
 describe('undeclared inputs rule', () => {
   it('warns about undeclared inputs passed to other actions', () => {

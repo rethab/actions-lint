@@ -8882,6 +8882,47 @@ exports.debug = debug; // for test
 
 /***/ }),
 
+/***/ 7672:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.run = void 0;
+const workflow_parser_1 = __nccwpck_require__(9781);
+const tokens_1 = __nccwpck_require__(5457);
+const linter_1 = __nccwpck_require__(4756);
+const trace_writer_1 = __nccwpck_require__(3192);
+function run(core, fs) {
+    const file = core.getInput('files', { required: true });
+    const content = fs.readFileSync(file, 'utf8');
+    const { value, errors } = (0, workflow_parser_1.parseWorkflow)(file, [{ name: file, content }], new trace_writer_1.NoOperationTraceWriter());
+    if (!value ||
+        !(value instanceof tokens_1.MappingToken) ||
+        value.getObjectKeys().length === 0) {
+        throw new Error(`Not a valid YAML file: ${file}`);
+    }
+    if (errors.length > 0) {
+        errors.forEach((error) => core.error(error.message));
+    }
+    const problems = new linter_1.Linter().lint(value);
+    if (problems.length === 0 && errors.length === 0) {
+        core.info('Linted 1 file');
+        return;
+    }
+    for (const problem of problems) {
+        printProblem(core, problem);
+    }
+    core.setFailed('Found problems');
+}
+exports.run = run;
+function printProblem(core, p) {
+    core.error(p.message);
+}
+
+
+/***/ }),
+
 /***/ 4756:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -8889,7 +8930,6 @@ exports.debug = debug; // for test
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Linter = void 0;
-const tokens_1 = __nccwpck_require__(5457);
 const inconsistent_action_versions_rule_1 = __nccwpck_require__(9883);
 const missing_action_version_rule_1 = __nccwpck_require__(9775);
 const required_input_with_default_rule_1 = __nccwpck_require__(378);
@@ -8897,9 +8937,6 @@ const undeclared_inputs_rule_1 = __nccwpck_require__(1640);
 const unused_inputs_rule_1 = __nccwpck_require__(7261);
 class Linter {
     lint(template) {
-        if (!(template instanceof tokens_1.MappingToken)) {
-            throw new Error('Template must be a MappingToken');
-        }
         const rules = [
             new unused_inputs_rule_1.UnusedInputsRule(),
             new undeclared_inputs_rule_1.UndeclaredInputsRule(),
@@ -17423,31 +17460,10 @@ var exports = __webpack_exports__;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const tslib_1 = __nccwpck_require__(4351);
-const workflow_parser_1 = __nccwpck_require__(9781);
-const core_1 = __nccwpck_require__(2186);
+const core = tslib_1.__importStar(__nccwpck_require__(2186));
 const fs_1 = tslib_1.__importDefault(__nccwpck_require__(7147));
-const linter_1 = __nccwpck_require__(4756);
-function main() {
-    const file = (0, core_1.getInput)('files', { required: true });
-    const content = fs_1.default.readFileSync(file, 'utf8');
-    const { value, errors } = (0, workflow_parser_1.parseWorkflow)('test.yaml', [{ name: 'test.yaml', content }], { verbose: console.log, ...console });
-    if (errors.length > 0) {
-        throw new Error(errors.map((e) => e.message).join('\n'));
-    }
-    if (!value) {
-        throw new Error('No value');
-    }
-    const problems = new linter_1.Linter().lint(value);
-    if (problems.length === 0) {
-        (0, core_1.info)('all good :)');
-        return;
-    }
-    for (const problem of problems) {
-        (0, core_1.error)(problem.message);
-    }
-    (0, core_1.setFailed)('Found problems');
-}
-main();
+const action_1 = __nccwpck_require__(7672);
+(0, action_1.run)(core, fs_1.default);
 
 })();
 

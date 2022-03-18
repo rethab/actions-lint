@@ -1,4 +1,4 @@
-import { lintWorkflow } from '../linter.spec';
+import { lintWorkflow } from '../utils';
 
 describe('missing action version rule', () => {
   it('warns about missing reference', () => {
