@@ -9099,22 +9099,35 @@ class Rule {
         const jobs = template.getObjectValue('jobs');
         for (const jobKey of jobs.getObjectKeys()) {
             const job = jobs.getObjectValue(jobKey);
+            const env = job.getObjectValue('env');
+            if (env) {
+                inputs.push(...this.getInputsFromMap(env));
+            }
             const steps = job.getObjectValue('steps');
             for (let stepIndex = 0; stepIndex < steps.getArrayLength(); stepIndex++) {
                 const step = steps.getArrayItem(stepIndex);
                 const actionInputs = step.getObjectValue('with');
                 if (actionInputs) {
-                    for (const actionInputKey of actionInputs.getObjectKeys()) {
-                        const actionInput = actionInputs.getObjectValue(actionInputKey);
-                        if (actionInput instanceof tokens_1.BasicExpressionToken) {
-                            inputs.push(...this.getInputsFromExpression(actionInput));
-                        }
-                    }
+                    inputs.push(...this.getInputsFromMap(actionInputs));
+                }
+                const env = step.getObjectValue('env');
+                if (env) {
+                    inputs.push(...this.getInputsFromMap(env));
                 }
                 const runStep = step.getObjectValue('run');
                 if (runStep && runStep instanceof tokens_1.BasicExpressionToken) {
                     inputs.push(...this.getInputsFromExpression(runStep));
                 }
+            }
+        }
+        return inputs;
+    }
+    getInputsFromMap(map) {
+        const inputs = [];
+        for (const key of map.getObjectKeys()) {
+            const value = map.getObjectValue(key);
+            if (value instanceof tokens_1.BasicExpressionToken) {
+                inputs.push(...this.getInputsFromExpression(value));
             }
         }
         return inputs;
