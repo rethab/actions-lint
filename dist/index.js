@@ -8897,9 +8897,7 @@ function run(core, fs) {
     const file = core.getInput('files', { required: true });
     const content = fs.readFileSync(file, 'utf8');
     const { value, errors } = (0, workflow_parser_1.parseWorkflow)(file, [{ name: file, content }], new trace_writer_1.NoOperationTraceWriter());
-    if (!value ||
-        !(value instanceof tokens_1.MappingToken) ||
-        value.getObjectKeys().length === 0) {
+    if (!value || !(value instanceof tokens_1.MappingToken) || value.getObjectKeys().length === 0) {
         throw new Error(`Not a valid YAML file: ${file}`);
     }
     if (errors.length > 0) {
@@ -8936,7 +8934,9 @@ const inconsistent_action_versions_rule_1 = __nccwpck_require__(9883);
 const missing_action_version_rule_1 = __nccwpck_require__(9775);
 const required_input_with_default_rule_1 = __nccwpck_require__(378);
 const undeclared_inputs_rule_1 = __nccwpck_require__(1640);
+const undeclared_secrets_rule_1 = __nccwpck_require__(3933);
 const unused_inputs_rule_1 = __nccwpck_require__(7261);
+const unused_secrets_rule_1 = __nccwpck_require__(8381);
 class Linter {
     lint(template) {
         const rules = [
@@ -8945,6 +8945,8 @@ class Linter {
             new inconsistent_action_versions_rule_1.InconsistentActionVersionsRule(),
             new missing_action_version_rule_1.MissingActionVersionRule(),
             new required_input_with_default_rule_1.RequiredInputWithDefaultRule(),
+            new undeclared_secrets_rule_1.UndeclaredSecretsRule(),
+            new unused_secrets_rule_1.UnusedSecretsRule(),
         ];
         const problems = [];
         for (const rule of rules) {
@@ -8976,9 +8978,7 @@ class InconsistentActionVersionsRule extends rule_1.Rule {
                 const otherVersions = coordinates.filter((coordinate) => coordinate.ref !== ref);
                 if (otherVersions.length > 0) {
                     problems.push({
-                        message: `${name} also seen with ${otherVersions
-                            .map(({ ref }) => ref)
-                            .join(', ')}`,
+                        message: `${name} also seen with ${otherVersions.map(({ ref }) => ref).join(', ')}`,
                         position,
                     });
                 }
@@ -9081,64 +9081,72 @@ exports.Rule = exports.EmptyMappingToken = void 0;
 const tokens_1 = __nccwpck_require__(5457);
 exports.EmptyMappingToken = new tokens_1.MappingToken(undefined, undefined, undefined);
 class Rule {
-    getDeclaredInputs(template) {
-        const triggers = template.getObjectValue('on');
-        if (!triggers)
-            return exports.EmptyMappingToken;
-        const workflowCall = triggers.getObjectValue('workflow_call');
-        if (workflowCall instanceof tokens_1.MappingToken) {
-            const inputs = workflowCall.getObjectValue('inputs');
-            if (inputs instanceof tokens_1.MappingToken) {
-                return inputs;
-            }
+    getDeclaredInputs(tpl) {
+        return this.getNestedObjectValue(tpl, 'on', 'workflow_call', 'inputs');
+    }
+    getDeclaredSecrets(tpl) {
+        return this.getNestedObjectValue(tpl, 'on', 'workflow_call', 'secrets');
+    }
+    getNestedObjectValue(template, ...path) {
+        let current = template;
+        for (const key of path) {
+            current = current.getObjectValue(key);
+            if (!current || !(current instanceof tokens_1.MappingToken))
+                return exports.EmptyMappingToken;
         }
-        return exports.EmptyMappingToken;
+        return current;
     }
     getUsedInputs(template) {
-        const inputs = [];
+        return this.getUsages('input', template);
+    }
+    getUsedSecrets(template) {
+        return this.getUsages('secret', template);
+    }
+    getUsages(type, template) {
+        const usages = [];
         const jobs = template.getObjectValue('jobs');
         for (const jobKey of jobs.getObjectKeys()) {
             const job = jobs.getObjectValue(jobKey);
             const env = job.getObjectValue('env');
             if (env) {
-                inputs.push(...this.getInputsFromMap(env));
+                usages.push(...this.getUsageFromMap(type, env));
             }
             const steps = job.getObjectValue('steps');
             for (let stepIndex = 0; stepIndex < steps.getArrayLength(); stepIndex++) {
                 const step = steps.getArrayItem(stepIndex);
                 const actionInputs = step.getObjectValue('with');
                 if (actionInputs) {
-                    inputs.push(...this.getInputsFromMap(actionInputs));
+                    usages.push(...this.getUsageFromMap(type, actionInputs));
                 }
                 const env = step.getObjectValue('env');
                 if (env) {
-                    inputs.push(...this.getInputsFromMap(env));
+                    usages.push(...this.getUsageFromMap(type, env));
                 }
                 const runStep = step.getObjectValue('run');
                 if (runStep && runStep instanceof tokens_1.BasicExpressionToken) {
-                    inputs.push(...this.getInputsFromExpression(runStep));
+                    usages.push(...this.getUsageFromExpression(type, runStep));
                 }
             }
         }
-        return inputs;
+        return usages;
     }
-    getInputsFromMap(map) {
-        const inputs = [];
+    getUsageFromMap(type, map) {
+        const usages = [];
         for (const key of map.getObjectKeys()) {
             const value = map.getObjectValue(key);
             if (value instanceof tokens_1.BasicExpressionToken) {
-                inputs.push(...this.getInputsFromExpression(value));
+                usages.push(...this.getUsageFromExpression(type, value));
             }
         }
-        return inputs;
+        return usages;
     }
-    getInputsFromExpression(expression) {
+    getUsageFromExpression(type, expression) {
         const position = { line: expression.line, column: expression.col };
-        const input = this.getInputFromExpressionString(expression.expression, position);
-        if (input) {
-            return [input];
+        const usage = this.getUsageFromExpressionString(type, expression.expression, position);
+        if (usage) {
+            return [usage];
         }
-        const inputs = [];
+        const usages = [];
         if (expression.expression.startsWith('format(')) {
             // expressions look like so: format('{0}', inputs.foo)
             const argsPosition = expression.expression.lastIndexOf("'");
@@ -9147,26 +9155,23 @@ class Rule {
                 .split(',')
                 .map((arg) => arg.trim());
             for (const arg of args) {
-                const input = this.getInputFromExpressionString(arg, position);
+                const input = this.getUsageFromExpressionString(type, arg, position);
                 if (input) {
-                    inputs.push(input);
+                    usages.push(input);
                 }
             }
         }
-        return inputs;
+        return usages;
     }
-    getInputFromExpressionString(expression, position) {
-        if (expression.startsWith('inputs.')) {
-            return {
-                name: expression.substring(7),
-                position: position,
-            };
+    getUsageFromExpressionString(type, expression, position) {
+        if (type === 'input' && expression.startsWith('inputs.')) {
+            return { name: expression.substring(7), position };
         }
-        if (expression.startsWith('github.event.inputs.')) {
-            return {
-                name: expression.substring(20),
-                position: position,
-            };
+        if (type === 'secret' && expression.startsWith('secrets.')) {
+            return { name: expression.substring(8), position };
+        }
+        if (type === 'input' && expression.startsWith('github.event.inputs.')) {
+            return { name: expression.substring(20), position };
         }
         return undefined;
     }
@@ -9183,10 +9188,7 @@ class Rule {
                     continue;
                 usedActions.push({
                     name: action.value,
-                    position: {
-                        line: action.line,
-                        column: action.col,
-                    },
+                    position: { line: action.line, column: action.col },
                 });
             }
         }
@@ -9227,6 +9229,35 @@ exports.UndeclaredInputsRule = UndeclaredInputsRule;
 
 /***/ }),
 
+/***/ 3933:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UndeclaredSecretsRule = void 0;
+const rule_1 = __nccwpck_require__(3040);
+class UndeclaredSecretsRule extends rule_1.Rule {
+    check(template) {
+        const declaredSecrets = this.getDeclaredSecrets(template);
+        const usedSecrets = this.getUsedSecrets(template);
+        const problems = [];
+        for (const usedSecret of usedSecrets) {
+            if (!declaredSecrets.getObjectValue(usedSecret.name)) {
+                problems.push({
+                    message: `Secret "${usedSecret.name}" is not declared`,
+                    position: usedSecret.position,
+                });
+            }
+        }
+        return problems;
+    }
+}
+exports.UndeclaredSecretsRule = UndeclaredSecretsRule;
+
+
+/***/ }),
+
 /***/ 7261:
 /***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
@@ -9240,7 +9271,6 @@ class UnusedInputsRule extends rule_1.Rule {
         const declaredInputs = this.getDeclaredInputs(template);
         const usedInputs = this.getUsedInputs(template);
         const problems = [];
-        // unused
         for (const inputName of declaredInputs.getObjectKeys()) {
             if (!usedInputs.map((usedInput) => usedInput.name).includes(inputName)) {
                 const input = declaredInputs.getObjectValue(inputName);
@@ -9257,6 +9287,39 @@ class UnusedInputsRule extends rule_1.Rule {
     }
 }
 exports.UnusedInputsRule = UnusedInputsRule;
+
+
+/***/ }),
+
+/***/ 8381:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.UnusedSecretsRule = void 0;
+const rule_1 = __nccwpck_require__(3040);
+class UnusedSecretsRule extends rule_1.Rule {
+    check(template) {
+        const declaredSecrets = this.getDeclaredSecrets(template);
+        const usedSecrets = this.getUsedSecrets(template);
+        const problems = [];
+        for (const secretName of declaredSecrets.getObjectKeys()) {
+            if (!usedSecrets.map((usedSecret) => usedSecret.name).includes(secretName)) {
+                const secret = declaredSecrets.getObjectValue(secretName);
+                problems.push({
+                    message: `Secret "${secretName}" is not used`,
+                    position: {
+                        line: secret.line,
+                        column: secret.col,
+                    },
+                });
+            }
+        }
+        return problems;
+    }
+}
+exports.UnusedSecretsRule = UnusedSecretsRule;
 
 
 /***/ }),
