@@ -118,4 +118,17 @@ describe('undeclared secrets rule', () => {
     );
     expect(errors).toHaveLength(0);
   });
+
+  it('GITHUB_TOKEN is always available', () => {
+    const errors = lintWorkflow(
+      `on:
+         workflow_call:
+       jobs:
+         job:
+           runs-on: ubuntu-latest
+           steps:
+             - run: echo \${{ secrets.GITHUB_TOKEN }}`
+    );
+    expect(errors).toHaveLength(0);
+  });
 });
