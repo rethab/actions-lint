@@ -4,7 +4,7 @@ import {
   SequenceToken,
   StringToken,
 } from '@fusectore/actions-yaml/dist/templates/tokens';
-import { Position, Problem } from '../linter';
+import { Position, Problem } from '../problem';
 
 export interface UsedInput {
   name: string;
@@ -89,7 +89,7 @@ export abstract class Rule {
   }
 
   getUsageFromExpression(type: 'secret' | 'input', expression: BasicExpressionToken): UsedInput[] {
-    const position = { line: expression.line!, column: expression.col! };
+    const position = { line: expression.line!, column: expression.col!, file: expression.file! };
 
     const usage = this.getUsageFromExpressionString(type, expression.expression, position);
 
@@ -147,7 +147,7 @@ export abstract class Rule {
         if (!action) continue;
         usedActions.push({
           name: action.value,
-          position: { line: action.line!, column: action.col! },
+          position: Position.fromToken(action),
         });
       }
     }

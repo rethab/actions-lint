@@ -1,5 +1,5 @@
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
-import { Problem } from '../linter';
+import { Problem } from '../problem';
 import { Rule } from './rule';
 
 export class UnusedInputsRule extends Rule {
@@ -12,13 +12,7 @@ export class UnusedInputsRule extends Rule {
     for (const inputName of declaredInputs.getObjectKeys()) {
       if (!usedInputs.map((usedInput) => usedInput.name).includes(inputName)) {
         const input = declaredInputs.getObjectValue(inputName) as MappingToken;
-        problems.push({
-          message: `Input "${inputName}" is not used`,
-          position: {
-            line: input.line!,
-            column: input.col!,
-          },
-        });
+        problems.push(Problem.fromToken(`Input "${inputName}" is not used`, input));
       }
     }
 

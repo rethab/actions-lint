@@ -36,7 +36,9 @@ describe('action', () => {
 
     run(core, fs);
 
-    expect(core.error).toHaveBeenCalledWith('Input "mode" is not declared');
+    expect(core.error).toHaveBeenCalledWith(
+      '/path/to/file.yml (Line: 9, Col: 17): Input "mode" is not declared'
+    );
     expect(core.setFailed).toHaveBeenCalledWith('Found problems');
   });
 

@@ -2,7 +2,7 @@ import { parseWorkflow } from '@fusectore/actions-yaml/dist/workflows/workflow-p
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
 import * as Core from '@actions/core';
 import * as Fs from 'fs';
-import { Linter, Problem } from './linter';
+import { Linter } from './linter';
 import { NoOperationTraceWriter } from '@fusectore/actions-yaml/dist/templates/trace-writer';
 
 export function run(core: typeof Core, fs: typeof Fs) {
@@ -32,12 +32,8 @@ export function run(core: typeof Core, fs: typeof Fs) {
   }
 
   for (const problem of problems) {
-    printProblem(core, problem);
+    problem.print(core, [file]);
   }
 
   core.setFailed('Found problems');
-}
-
-function printProblem(core: typeof Core, p: Problem) {
-  core.error(p.message);
 }

@@ -14,13 +14,10 @@ describe('undeclared secrets rule', () => {
                with:
                  mode: \${{ secrets.mode }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Secret "mode" is not declared`,
-        position: {
-          line: 10,
-          column: 24,
-        },
+        position: { file: 1, line: 10, column: 24 },
       },
     ]);
   });
@@ -41,13 +38,10 @@ describe('undeclared secrets rule', () => {
                with:
                  mode: \${{ secrets.mode }}/\${{ secrets.mode2 }}/\${{ secrets.mode }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Secret "mode2" is not declared`,
-        position: {
-          line: 13,
-          column: 24,
-        },
+        position: { file: 1, line: 13, column: 24 },
       },
     ]);
   });
@@ -63,10 +57,11 @@ describe('undeclared secrets rule', () => {
            steps:
              - run: echo \${{ secrets.mode }}/\${{ secrets.expert }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Secret "mode" is not declared`,
         position: {
+          file: 1,
           line: 8,
           column: 21,
         },
@@ -74,6 +69,7 @@ describe('undeclared secrets rule', () => {
       {
         message: `Secret "expert" is not declared`,
         position: {
+          file: 1,
           line: 8,
           column: 21,
         },

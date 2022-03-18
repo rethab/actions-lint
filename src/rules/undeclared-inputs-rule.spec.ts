@@ -14,10 +14,11 @@ describe('undeclared inputs rule', () => {
                with:
                  mode: \${{ inputs.mode }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Input "mode" is not declared`,
         position: {
+          file: 1,
           line: 10,
           column: 24,
         },
@@ -43,10 +44,11 @@ describe('undeclared inputs rule', () => {
                with:
                  mode: \${{ inputs.mode }}/\${{ inputs.mode2 }}/\${{ inputs.mode }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Input "mode2" is not declared`,
         position: {
+          file: 1,
           line: 15,
           column: 24,
         },
@@ -65,10 +67,11 @@ describe('undeclared inputs rule', () => {
            steps:
              - run: echo \${{ inputs.mode }}/\${{ inputs.expert }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: `Input "mode" is not declared`,
         position: {
+          file: 1,
           line: 8,
           column: 21,
         },
@@ -76,6 +79,7 @@ describe('undeclared inputs rule', () => {
       {
         message: `Input "expert" is not declared`,
         position: {
+          file: 1,
           line: 8,
           column: 21,
         },

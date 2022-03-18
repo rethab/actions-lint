@@ -17,13 +17,10 @@ describe('required input with default rule', () => {
            steps:
              - run: echo \${{ inputs.my-input }}`
     );
-    expect(errors).toStrictEqual([
+    expect(errors).toMatchObject([
       {
         message: 'Input my-input is required but has a default value.',
-        position: {
-          line: 5,
-          column: 16,
-        },
+        position: { file: 1, line: 5, column: 16 },
       },
     ]);
   });

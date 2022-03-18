@@ -1,5 +1,5 @@
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
-import { Problem } from '../linter';
+import { Problem } from '../problem';
 import { Rule } from './rule';
 
 export class UndeclaredInputsRule extends Rule {
@@ -11,10 +11,7 @@ export class UndeclaredInputsRule extends Rule {
 
     for (const usedInput of usedInputs) {
       if (!declaredInputs.getObjectValue(usedInput.name)) {
-        problems.push({
-          message: `Input "${usedInput.name}" is not declared`,
-          position: usedInput.position,
-        });
+        problems.push(new Problem(`Input "${usedInput.name}" is not declared`, usedInput.position));
       }
     }
 
