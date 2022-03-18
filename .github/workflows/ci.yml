@@ -56,6 +56,20 @@ jobs:
         with:
           files: .energy-quants/.github/workflows/cleanup-pr.yml
 
+  community_build_fs2open:
+    name: Community Build (SCP FreeSpace 2 Open)
+    needs: [ci, self_test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: scp-fs2open/fs2open.github.com
+          path: .fs2open
+      - uses: ./
+        with:
+          files: .fs2open/.github/workflows/post-build-release.yaml
+
   # More:
   # - https://github.com/scp-fs2open/fs2open.github.com
   # - https://github.com/collinmcneese/gh_workflows
