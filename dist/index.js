@@ -9238,11 +9238,18 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UndeclaredSecretsRule = void 0;
 const rule_1 = __nccwpck_require__(3040);
 class UndeclaredSecretsRule extends rule_1.Rule {
+    constructor() {
+        super(...arguments);
+        this.predefinedSecrets = ['GITHUB_TOKEN'];
+    }
     check(template) {
         const declaredSecrets = this.getDeclaredSecrets(template);
         const usedSecrets = this.getUsedSecrets(template);
         const problems = [];
         for (const usedSecret of usedSecrets) {
+            if (this.predefinedSecrets.includes(usedSecret.name)) {
+                continue;
+            }
             if (!declaredSecrets.getObjectValue(usedSecret.name)) {
                 problems.push({
                     message: `Secret "${usedSecret.name}" is not declared`,
