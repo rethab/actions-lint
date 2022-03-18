@@ -9120,40 +9120,45 @@ class Rule {
         return inputs;
     }
     getInputsFromExpression(expression) {
-        const inputs = [];
-        if (expression.expression.startsWith('inputs.')) {
-            inputs.push({
-                name: expression.expression.substring(7),
-                position: {
-                    line: expression.line,
-                    column: expression.col,
-                },
-            });
+        const position = { line: expression.line, column: expression.col };
+        const input = this.getInputFromExpressionString(expression.expression, position);
+        if (input) {
+            return [input];
         }
-        else if (expression.expression.startsWith('format(')) {
-            // expressions look like so: format('{0}', inputs.foo
+        const inputs = [];
+        if (expression.expression.startsWith('format(')) {
+            // expressions look like so: format('{0}', inputs.foo)
             const argsPosition = expression.expression.lastIndexOf("'");
             const args = expression.expression
                 .substring(argsPosition + 3, expression.expression.length - 1)
                 .split(',')
                 .map((arg) => arg.trim());
             for (const arg of args) {
-                if (arg.startsWith('inputs.')) {
-                    inputs.push({
-                        name: arg.substring(7),
-                        position: {
-                            line: expression.line,
-                            column: expression.col,
-                        },
-                    });
+                const input = this.getInputFromExpressionString(arg, position);
+                if (input) {
+                    inputs.push(input);
                 }
             }
         }
         return inputs;
     }
+    getInputFromExpressionString(expression, position) {
+        if (expression.startsWith('inputs.')) {
+            return {
+                name: expression.substring(7),
+                position: position,
+            };
+        }
+        if (expression.startsWith('github.event.inputs.')) {
+            return {
+                name: expression.substring(20),
+                position: position,
+            };
+        }
+        return undefined;
+    }
     getUsedActions(template) {
         const jobs = template.getObjectValue('jobs');
-        //if (!jobs || !(jobs instanceof MappingToken)) return [];
         const usedActions = [];
         for (const jobKey of jobs.getObjectKeys()) {
             const job = jobs.getObjectValue(jobKey);
