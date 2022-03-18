@@ -8,19 +8,24 @@ import { NoOperationTraceWriter } from '@fusectore/actions-yaml/dist/templates/t
 export function run(core: typeof Core, fs: typeof Fs) {
   const file = core.getInput('files', { required: true });
   const content = fs.readFileSync(file, 'utf8');
+
+  lint(core, file, content);
+}
+
+function lint(core: typeof Core, filename: string, content: string) {
   const { value, errors } = parseWorkflow(
-    file,
-    [{ name: file, content }],
+    filename,
+    [{ name: filename, content }],
     new NoOperationTraceWriter()
   );
 
   if (!value || !(value instanceof MappingToken) || value.getObjectKeys().length === 0) {
-    throw new Error(`Not a valid YAML file: ${file}`);
+    throw new Error(`Not a valid YAML file: ${filename}`);
   }
 
   if (errors.length > 0) {
     errors.forEach((error) => core.error(error.message));
-    core.setFailed(`File ${file} is invalid`);
+    core.setFailed(`File ${filename} is invalid`);
     return;
   }
 
@@ -32,7 +37,7 @@ export function run(core: typeof Core, fs: typeof Fs) {
   }
 
   for (const problem of problems) {
-    problem.print(core, [file]);
+    problem.print(core, [filename]);
   }
 
   core.setFailed('Found problems');

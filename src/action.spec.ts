@@ -67,6 +67,15 @@ describe('action', () => {
     );
     expect(core.setFailed).toHaveBeenCalledWith('File /path/to/file.yml is invalid');
   });
+
+  it('installs problem matcher', () => {
+    const { core, fs } = setup({ workflow: validWorkflow });
+
+    run(core, fs);
+
+    expect(core.info).toHaveBeenNthCalledWith(1, '::add-matcher::matcher.json');
+    expect(core.info).toHaveBeenNthCalledWith(2, '::remove-matcher owner=actions-lint::');
+  });
 });
 
 function setup(config: { workflow: string }) {
