@@ -70,6 +70,28 @@ jobs:
         with:
           files: .fs2open/.github/workflows/post-build-release.yaml
 
-  # More:
-  # - https://github.com/collinmcneese/gh_workflows
-  # - https://github.com/fraunhofer-iem/dodo-database-service
+  community_build_dodo_database:
+    name: Community Build (DoDo Database)
+    needs: [ci, self_test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: fraunhofer-iem/dodo-database-service
+          path: .dodo
+      - uses: ./
+        with:
+          files: .dodo/.github/workflows/updateDeploy.yml
+      - uses: ./
+        with:
+          files: .dodo/.github/workflows/test.yml
+      - uses: ./
+        with:
+          files: .dodo/.github/workflows/tag.yml
+      - uses: ./
+        with:
+          files: .dodo/.github/workflows/release.yml
+      - uses: ./
+        with:
+          files: .dodo/.github/workflows/lint.yml
