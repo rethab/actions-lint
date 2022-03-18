@@ -3,6 +3,7 @@ on:
 
 jobs:
   ci:
+    name: CI
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -20,6 +21,7 @@ jobs:
           [[ -z $(git status -s) ]]
 
   self_test:
+    name: Self Test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,3 +35,23 @@ jobs:
           files: test/unused-input.yml
       - run: exit 1
         if: steps.unused-input.status == 'success'
+
+  community_build_energy_quants:
+    name: Community Build (Energy Quants)
+    needs: [ci, self_test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+        with:
+          repository: energy-quants/.github
+          path: .energy-quants
+      - uses: ./
+        with:
+          files: .energy-quants/.github/workflows/build-images.yml
+      - uses: ./
+        with:
+          files: .energy-quants/.github/workflows/cleanup-images.yml
+      - uses: ./
+        with:
+          files: .energy-quants/.github/workflows/cleanup-pr.yml
