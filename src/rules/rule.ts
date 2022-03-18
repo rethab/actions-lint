@@ -30,7 +30,10 @@ export abstract class Rule {
     if (!triggers) return EmptyMappingToken;
     const workflowCall = triggers.getObjectValue('workflow_call');
     if (workflowCall instanceof MappingToken) {
-      return workflowCall.getObjectValue('inputs') as MappingToken;
+      const inputs = workflowCall.getObjectValue('inputs');
+      if (inputs instanceof MappingToken) {
+        return inputs;
+      }
     }
     return EmptyMappingToken;
   }
@@ -40,20 +43,25 @@ export abstract class Rule {
     const jobs = template.getObjectValue('jobs') as MappingToken;
     for (const jobKey of jobs.getObjectKeys()) {
       const job = jobs.getObjectValue(jobKey) as MappingToken;
+
+      const env = job.getObjectValue('env');
+      if (env) {
+        inputs.push(...this.getInputsFromMap(env));
+      }
+
       const steps = job.getObjectValue('steps') as SequenceToken;
       for (let stepIndex = 0; stepIndex < steps.getArrayLength(); stepIndex++) {
         const step = steps.getArrayItem(stepIndex) as MappingToken;
-        const actionInputs = step.getObjectValue('with') as MappingToken;
+        const actionInputs = step.getObjectValue('with');
         if (actionInputs) {
-          for (const actionInputKey of actionInputs.getObjectKeys()) {
-            const actionInput = actionInputs.getObjectValue(actionInputKey);
-            if (actionInput instanceof BasicExpressionToken) {
-              inputs.push(...this.getInputsFromExpression(actionInput));
-            }
-          }
+          inputs.push(...this.getInputsFromMap(actionInputs));
         }
-        const runStep = step.getObjectValue('run') as BasicExpressionToken;
-        if (runStep) {
+        const env = step.getObjectValue('env');
+        if (env) {
+          inputs.push(...this.getInputsFromMap(env));
+        }
+        const runStep = step.getObjectValue('run');
+        if (runStep && runStep instanceof BasicExpressionToken) {
           inputs.push(...this.getInputsFromExpression(runStep));
         }
       }
@@ -61,33 +69,41 @@ export abstract class Rule {
     return inputs;
   }
 
-  getInputsFromExpression(expression: BasicExpressionToken): UsedInput[] {
+  getInputsFromMap(map: MappingToken): UsedInput[] {
     const inputs: UsedInput[] = [];
+    for (const key of map.getObjectKeys()) {
+      const value = map.getObjectValue(key);
+      if (value instanceof BasicExpressionToken) {
+        inputs.push(...this.getInputsFromExpression(value));
+      }
+    }
+    return inputs;
+  }
 
-    if (expression.expression.startsWith('inputs.')) {
-      inputs.push({
-        name: expression.expression.substring(7),
-        position: {
-          line: expression.line!,
-          column: expression.col!,
-        },
-      });
-    } else if (expression.expression.startsWith('format(')) {
-      // expressions look like so: format('{0}', inputs.foo
+  getInputsFromExpression(expression: BasicExpressionToken): UsedInput[] {
+    const position = { line: expression.line!, column: expression.col! };
+
+    const input = this.getInputFromExpressionString(
+      expression.expression,
+      position
+    );
+
+    if (input) {
+      return [input];
+    }
+
+    const inputs: UsedInput[] = [];
+    if (expression.expression.startsWith('format(')) {
+      // expressions look like so: format('{0}', inputs.foo)
       const argsPosition = expression.expression.lastIndexOf("'");
       const args = expression.expression
         .substring(argsPosition + 3, expression.expression.length - 1)
         .split(',')
         .map((arg) => arg.trim());
       for (const arg of args) {
-        if (arg.startsWith('inputs.')) {
-          inputs.push({
-            name: arg.substring(7),
-            position: {
-              line: expression.line!,
-              column: expression.col!,
-            },
-          });
+        const input = this.getInputFromExpressionString(arg, position);
+        if (input) {
+          inputs.push(input);
         }
       }
     }
@@ -95,8 +111,29 @@ export abstract class Rule {
     return inputs;
   }
 
+  getInputFromExpressionString(
+    expression: string,
+    position: Position
+  ): UsedInput | undefined {
+    if (expression.startsWith('inputs.')) {
+      return {
+        name: expression.substring(7),
+        position: position,
+      };
+    }
+    if (expression.startsWith('github.event.inputs.')) {
+      return {
+        name: expression.substring(20),
+        position: position,
+      };
+    }
+
+    return undefined;
+  }
+
   getUsedActions(template: MappingToken): UsedAction[] {
     const jobs = template.getObjectValue('jobs') as MappingToken;
+
     const usedActions: UsedAction[] = [];
     for (const jobKey of jobs.getObjectKeys()) {
       const job = jobs.getObjectValue(jobKey) as MappingToken;
