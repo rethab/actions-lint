@@ -8889,14 +8889,16 @@ exports.debug = debug; // for test
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = void 0;
+const tslib_1 = __nccwpck_require__(4351);
 const workflow_parser_1 = __nccwpck_require__(9781);
 const tokens_1 = __nccwpck_require__(5457);
+const path = tslib_1.__importStar(__nccwpck_require__(1017));
 const linter_1 = __nccwpck_require__(4756);
 const trace_writer_1 = __nccwpck_require__(3192);
 function run(core, fs) {
     const file = core.getInput('files', { required: true });
     const content = fs.readFileSync(file, 'utf8');
-    core.info('::add-matcher::matcher.json');
+    core.info(`##[add-matcher]${path.join(__dirname, '../..', 'matcher.json')}`);
     lint(core, file, content);
     core.info('::remove-matcher owner=actions-lint::');
 }

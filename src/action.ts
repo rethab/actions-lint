@@ -2,6 +2,7 @@ import { parseWorkflow } from '@fusectore/actions-yaml/dist/workflows/workflow-p
 import { MappingToken } from '@fusectore/actions-yaml/dist/templates/tokens';
 import * as Core from '@actions/core';
 import * as Fs from 'fs';
+import * as path from 'path';
 import { Linter } from './linter';
 import { NoOperationTraceWriter } from '@fusectore/actions-yaml/dist/templates/trace-writer';
 
@@ -9,7 +10,7 @@ export function run(core: typeof Core, fs: typeof Fs) {
   const file = core.getInput('files', { required: true });
   const content = fs.readFileSync(file, 'utf8');
 
-  core.info('::add-matcher::matcher.json');
+  core.info(`##[add-matcher]${path.join(__dirname, '../..', 'matcher.json')}`);
   lint(core, file, content);
   core.info('::remove-matcher owner=actions-lint::');
 }

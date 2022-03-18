@@ -73,9 +73,31 @@ describe('action', () => {
 
     run(core, fs);
 
-    expect(core.info).toHaveBeenNthCalledWith(1, '::add-matcher::matcher.json');
+    expect(core.info).toHaveBeenNthCalledWith(
+      1,
+      expect.stringMatching(/##\[add-matcher].+\/matcher.json/)
+    );
     expect(core.info).toHaveBeenNthCalledWith(2, 'Linted 1 file');
     expect(core.info).toHaveBeenNthCalledWith(3, '::remove-matcher owner=actions-lint::');
+  });
+
+  it('problem matcher matches linter problem message', () => {
+    const { core, fs } = setup({ workflow: problematicWorkflow });
+    const [
+      {
+        pattern: [{ regexp }],
+      },
+    ] = require('../matcher.json').problemMatcher;
+
+    run(core, fs);
+
+    const errorMessage = (core.error as any).mock.calls[0][0];
+
+    const match = errorMessage.match(new RegExp(regexp));
+    expect(match[1]).toBe('/path/to/file.yml');
+    expect(match[2]).toBe('9');
+    expect(match[3]).toBe('17');
+    expect(match[4]).toBe('Input "mode" is not declared');
   });
 });
 
