@@ -8983,7 +8983,7 @@ class Problem {
     print(core, files) {
         const { file, line, column } = this.position;
         const filename = files[file - 1];
-        core.error(`${filename} (Line: ${line}, Col: ${column}): ${this.message}`);
+        core.info(`${filename} (Line: ${line}, Col: ${column}): ${this.message}`);
     }
 }
 exports.Problem = Problem;

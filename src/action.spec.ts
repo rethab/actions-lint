@@ -36,7 +36,7 @@ describe('action', () => {
 
     run(core, fs);
 
-    expect(core.error).toHaveBeenCalledWith(
+    expect(core.info).toHaveBeenCalledWith(
       '/path/to/file.yml (Line: 9, Col: 17): Input "mode" is not declared'
     );
     expect(core.setFailed).toHaveBeenCalledWith('Found problems');
@@ -91,7 +91,7 @@ describe('action', () => {
 
     run(core, fs);
 
-    const errorMessage = (core.error as any).mock.calls[0][0];
+    const errorMessage = (core.info as any).mock.calls[1][0];
 
     const match = errorMessage.match(new RegExp(regexp));
     expect(match[1]).toBe('/path/to/file.yml');
